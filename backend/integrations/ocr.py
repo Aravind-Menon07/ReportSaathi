@@ -13,12 +13,10 @@ from backend.safety.rules import evaluate_biomarker, check_red_flags
 
 def _find_tesseract_cmd() -> str:
     """Finds tesseract executable across system PATH and standard Windows locations."""
-    # Check system PATH
     which_path = shutil.which("tesseract")
     if which_path:
         return which_path
 
-    # Standard Windows install locations
     win_paths = [
         r"C:\Program Files\Tesseract-OCR\tesseract.exe",
         r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
@@ -50,8 +48,7 @@ def run_tesseract(image_path: Union[str, Path], psm: int = 6) -> str:
             errors="replace",
         )
         return proc.stdout
-    except Exception as e:
-        # Fallback if tesseract CLI errors or is mock tested
+    except Exception:
         return ""
 
 
@@ -72,17 +69,16 @@ def assess_text_clarity(text: str) -> Dict[str, Any]:
 
     stripped = text.strip()
     total_chars = len(stripped)
-    
-    # Count noise characters (garbled OCR artifacts like ~, ^, |, excessive non-alphanumeric/non-standard punctuation)
-    noise_chars = len(re.findall(r"[^\w\s\.,;:/\-()<>%+=]", stripped))
-    
-    # Check for unreadable artifact tokens like '???', '', '|||', excessive isolated single characters
-    unreadable_token_matches = re.findall(r"(\?{2,}|\b[a-zA-Z]{1}\b(?:\s+[a-zA-Z]{1}\b){3,}|[^\x00-\x7F]{2,})", stripped)
+
+    # Count noise characters (garbled OCR artifacts)
+    noise_chars = len(re.findall(r"[^\w\s\.,;:/\-()<>%+=|]", stripped))
+
+    # Check for unreadable artifact tokens
+    unreadable_token_matches = re.findall(r"(\?{2,}|\b[a-zA-Z]{1}\b(?:\s+[a-zA-Z]{1}\b){3,})", stripped)
     unreadable_token_count = len(unreadable_token_matches)
 
     noise_ratio = noise_chars / max(1, total_chars)
-    
-    # Penalize if noise ratio > 0.15 or multiple garbled tokens
+
     is_unclear = (noise_ratio > 0.15) or (unreadable_token_count >= 2)
     clarity_score = max(0.0, min(1.0, 1.0 - (noise_ratio * 3.0) - (unreadable_token_count * 0.1)))
 
@@ -99,7 +95,7 @@ def _clean_number(num_str: str) -> Optional[float]:
     """Converts a string representation of a number (including Indian formatted commas) into float."""
     if not num_str:
         return None
-    cleaned = num_str.replace(",", "").strip()
+    cleaned = re.sub(r"[^\d.\-+]", "", num_str.replace(",", ""))
     match = re.search(r"[-+]?\d*\.?\d+", cleaned)
     if match:
         try:
@@ -109,165 +105,268 @@ def _clean_number(num_str: str) -> Optional[float]:
     return None
 
 
+def _normalize_line(line: str) -> str:
+    """Normalize OCR artefacts: collapse multiple spaces, remove stray pipes used as column separators."""
+    line = re.sub(r"\|+", " ", line)          # pipes → spaces (table columns)
+    line = re.sub(r"\t+", " ", line)           # tabs   → spaces
+    line = re.sub(r" {2,}", " ", line)         # multi-space → single space
+    return line.strip()
+
+
 def parse_biomarkers_from_text(raw_text: str) -> List[Dict[str, Any]]:
     """Extracts test names, observed values, units, and printed ranges from report text.
-    Handles Indian formatted numbers (e.g., 3,25,000) and special operators (< 0.5, > 100, Negative).
+
+    Handles:
+    - Indian formatted numbers (3,25,000)
+    - Special operators (< 0.5, > 100, Negative, Positive, Non-Reactive)
+    - Multi-column table rows separated by spaces, tabs, or pipe characters
+    - Lines that contain only the name in one line and value+range in the next
     """
     if not raw_text:
         return []
 
     biomarkers: List[Dict[str, Any]] = []
-    lines = raw_text.splitlines()
+    seen_names: set = set()
 
-    # Units commonly present in Indian lab reports
-    units_pattern = r"(g/dL|mg/dL|mmol/L|mEq/L|/mcL|/cumm|cells/mcL|cells/cu\.mm|uIU/mL|IU/mL|ng/mL|pg/mL|mg/L|U/L|%|sec|seconds|fl|pg)"
-
-    # Regex 1: Full line with Name, Value, Unit, and Printed Range (e.g., "Hemoglobin 13.5 g/dL 12.0 - 15.5")
-    # Also handles Indian commas: "Platelet Count 2,40,000 /cumm 1,50,000 - 4,50,000"
-    regex_with_range = re.compile(
-        rf"^(?P<name>[A-Za-z0-9\s\(\)\/\-\.\+]+?)\s+"
-        rf"(?P<value>[<>]?\s*[\d,]+(?:\.\d+)?|Negative|Positive|Non-Reactive|Reactive)\s+"
-        rf"(?P<unit>{units_pattern})?\s+"
-        rf"(?P<range>(?:(?P<low>[\d,]+(?:\.\d+)?)\s*(?:-|to)\s*(?P<high>[\d,]+(?:\.\d+)?))|(?:[<>]\s*[\d,]+(?:\.\d+)?))",
-        re.IGNORECASE
+    # Extended units for Indian lab reports
+    units_pattern = (
+        r"(?:g/dL|mg/dL|mmol/L|mEq/L|/mcL|/cumm|cells/mcL|cells/cu\.mm"
+        r"|uIU/mL|IU/mL|mIU/mL|ng/mL|pg/mL|mg/L|U/L|g/L|umol/L|nmol/L"
+        r"|10\^3/uL|10\^6/uL|10\^9/L|K/uL|M/uL|/uL"
+        r"|fL|fl|pg|%|sec|seconds|min|hours|ratio)"
     )
 
-    # Regex 2: Line with Name, Value, Unit but NO Range (e.g., "C-Reactive Protein (CRP) 12.5 mg/L")
-    regex_no_range = re.compile(
-        rf"^(?P<name>[A-Za-z0-9\s\(\)\/\-\.\+]+?)\s+"
-        rf"(?P<value>[<>]?\s*[\d,]+(?:\.\d+)?|Negative|Positive)\s+"
+    # Number pattern that handles Indian comma formatting  
+    num_pat = r"[<>]?\s*[\d,]+(?:\.\d+)?"
+
+    # -------------------------------------------------------------------
+    # Regex A: Full row — Name  Value  Unit  Low-High
+    # e.g. "Hemoglobin  13.5  g/dL  12.0 - 15.5"
+    # -------------------------------------------------------------------
+    re_A = re.compile(
+        rf"^(?P<name>[A-Za-z][A-Za-z0-9 \(\)\/\-\.\+\#]*?)\s+"
+        rf"(?P<value>{num_pat}|Negative|Positive|Non-?Reactive|Reactive|Absent|Present)\s*"
+        rf"(?P<unit>{units_pattern})?\s*"
+        rf"(?P<low>[\d,]+(?:\.\d+)?)\s*[-–to]+\s*(?P<high>[\d,]+(?:\.\d+)?)",
+        re.IGNORECASE,
+    )
+
+    # -------------------------------------------------------------------
+    # Regex B: Name  Value  Unit  (no printed range)
+    # e.g. "C-Reactive Protein  12.5  mg/L"
+    # -------------------------------------------------------------------
+    re_B = re.compile(
+        rf"^(?P<name>[A-Za-z][A-Za-z0-9 \(\)\/\-\.\+\#]*?)\s+"
+        rf"(?P<value>{num_pat}|Negative|Positive|Non-?Reactive|Reactive)\s+"
         rf"(?P<unit>{units_pattern})\s*$",
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
-    # Regex 3: Tabular or multi-column without standard unit (e.g., "Platelets 18000 150000-450000")
-    regex_simple_table = re.compile(
-        r"^(?P<name>[A-Za-z0-9\s\(\)\/\-\.\+]+?)\s+"
+    # -------------------------------------------------------------------
+    # Regex C: Tabular — Name  Value  Low-High  (no explicit unit)
+    # e.g. "Platelets  18000  150000 - 450000"
+    # -------------------------------------------------------------------
+    re_C = re.compile(
+        r"^(?P<name>[A-Za-z][A-Za-z0-9 \(\)\/\-\.\+\#]*?)\s+"
         r"(?P<value>[\d,]+(?:\.\d+)?)\s+"
-        r"(?P<low>[\d,]+(?:\.\d+)?)\s*-\s*(?P<high>[\d,]+(?:\.\d+)?)",
-        re.IGNORECASE
+        r"(?P<low>[\d,]+(?:\.\d+)?)\s*[-–to]+\s*(?P<high>[\d,]+(?:\.\d+)?)",
+        re.IGNORECASE,
     )
 
-    # Known common clinical test names for fallback keyword matching
+    # -------------------------------------------------------------------
+    # Regex D: "Name  Value  Unit  < X" or "> X" (single-bound range)
+    # e.g. "TSH  2.3  uIU/mL  < 4.5"
+    # -------------------------------------------------------------------
+    re_D = re.compile(
+        rf"^(?P<name>[A-Za-z][A-Za-z0-9 \(\)\/\-\.\+\#]*?)\s+"
+        rf"(?P<value>{num_pat})\s+"
+        rf"(?P<unit>{units_pattern})?\s*"
+        rf"(?P<bound>[<>]\s*[\d,]+(?:\.\d+)?)\s*$",
+        re.IGNORECASE,
+    )
+
+    # -------------------------------------------------------------------
+    # Regex E: "Name  :  Value  Unit  Low - High" (colon-separated label)
+    # -------------------------------------------------------------------
+    re_E = re.compile(
+        rf"^(?P<name>[A-Za-z][A-Za-z0-9 \(\)\/\-\.\+\#]*?)\s*:\s*"
+        rf"(?P<value>{num_pat}|Negative|Positive|Non-?Reactive|Reactive)\s*"
+        rf"(?P<unit>{units_pattern})?\s*"
+        rf"(?:(?P<low>[\d,]+(?:\.\d+)?)\s*[-–to]+\s*(?P<high>[\d,]+(?:\.\d+)?))?",
+        re.IGNORECASE,
+    )
+
+    # Known clinical test names for keyword fallback
     known_tests = [
-        "hemoglobin", "hb", "hgb", "wbc", "rbc", "platelet", "tlc", "dlc",
-        "creatinine", "urea", "bun", "uric acid",
-        "potassium", "sodium", "chloride", "calcium",
-        "glucose", "fasting blood sugar", "ppbs", "rbs", "hba1c",
-        "cholesterol", "triglycerides", "hdl", "ldl", "vldl",
-        "bilirubin", "sgot", "ast", "sgpt", "alt", "alkaline phosphatase", "alp",
-        "tsh", "t3", "t4", "crp", "esr"
+        "hemoglobin", "haemoglobin", "hb", "hgb",
+        "wbc", "white blood cell", "white blood cells", "leukocyte",
+        "rbc", "red blood cell", "red blood cells", "erythrocyte",
+        "platelet", "platelets", "plt", "thrombocyte",
+        "tlc", "total leucocyte count", "dlc", "differential",
+        "hematocrit", "haematocrit", "packed cell volume", "pcv", "hct",
+        "mcv", "mch", "mchc", "rdw",
+        "neutrophil", "lymphocyte", "monocyte", "eosinophil", "basophil",
+        "creatinine", "serum creatinine",
+        "urea", "blood urea nitrogen", "bun",
+        "uric acid", "urate",
+        "potassium", "sodium", "chloride", "calcium", "phosphorus", "magnesium",
+        "bicarbonate", "co2",
+        "glucose", "blood sugar", "fasting glucose", "ppbs", "hba1c",
+        "total cholesterol", "cholesterol", "hdl", "ldl", "vldl", "triglyceride",
+        "alt", "sgpt", "ast", "sgot", "alp", "alkaline phosphatase",
+        "total bilirubin", "direct bilirubin", "indirect bilirubin",
+        "total protein", "albumin", "globulin",
+        "tsh", "t3", "t4", "free t3", "free t4",
+        "ferritin", "serum iron", "tibc", "transferrin",
+        "crp", "c-reactive protein", "esr",
+        "vitamin d", "vitamin b12", "folate",
+        "psa", "prostate specific antigen",
     ]
 
-    for line in lines:
-        cleaned_line = line.strip()
-        if not cleaned_line or len(cleaned_line) < 4:
+    lines = raw_text.splitlines()
+    i = 0
+    while i < len(lines):
+        raw_line = lines[i]
+        line = _normalize_line(raw_line)
+        i += 1
+
+        if len(line) < 3:
             continue
 
-        # Skip headers like "Test Name Result Reference Interval"
-        if re.search(r"\b(test name|investigation|parameter|reference interval|normal range|units?)\b", cleaned_line, re.IGNORECASE):
-            continue
+        # Try multi-line lookahead: if this line is ONLY a test name (no digits at all)
+        # and next line has numbers → merge them for parsing
+        if i < len(lines) and not re.search(r"\d", line):
+            next_line = _normalize_line(lines[i])
+            if re.match(r"^[A-Za-z][A-Za-z0-9 \(\)\/\-\.\+\#]{2,50}$", line) and re.search(r"\d", next_line):
+                merged = line + "  " + next_line
+                if re_A.match(merged) or re_C.match(merged):
+                    line = merged
+                    i += 1  # consume next line
 
-        # Try Regex 1 (Full line with range)
-        m1 = regex_with_range.match(cleaned_line)
-        if m1:
-            name = m1.group("name").strip()
-            val_str = m1.group("value").strip()
-            unit = m1.group("unit")
-            raw_range = m1.group("range")
-            low_str = m1.group("low")
-            high_str = m1.group("high")
+        def _add(name: str, value_str: str, unit: Optional[str],
+                 low_str: Optional[str], high_str: Optional[str],
+                 raw_range: str = "") -> bool:
+            name = name.strip()
+            key = name.lower()
+            if key in seen_names or len(name) < 2:
+                return False
+            seen_names.add(key)
 
-            num_val = _clean_number(val_str)
+            num_val = _clean_number(value_str)
             low_val = _clean_number(low_str) if low_str else None
             high_val = _clean_number(high_str) if high_str else None
 
-            # Handle single bounded ranges like "< 200" or "> 50"
-            if not low_val and not high_val and raw_range:
-                if "<" in raw_range:
-                    high_val = _clean_number(raw_range.replace("<", ""))
-                    low_val = 0.0
-                elif ">" in raw_range:
-                    low_val = _clean_number(raw_range.replace(">", ""))
-                    high_val = low_val * 3.0 if low_val else None
-
-            status = evaluate_biomarker(name, num_val if num_val is not None else val_str, unit, low_val, high_val)
+            status = evaluate_biomarker(
+                name,
+                num_val if num_val is not None else value_str,
+                unit,
+                low_val,
+                high_val,
+            )
             biomarkers.append({
                 "name": name,
-                "value": num_val if num_val is not None else val_str,
+                "value": num_val if num_val is not None else value_str,
                 "unit": unit or "",
                 "printed_range_low": low_val,
                 "printed_range_high": high_val,
-                "raw_range": raw_range or "",
-                "status": status
+                "raw_range": raw_range if raw_range else (
+                    f"{low_val} - {high_val}" if (low_val is not None and high_val is not None) else ""
+                ),
+                "status": status,
             })
+            return True
+
+        # Try Regex A
+        m = re_A.match(line)
+        if m:
+            rr = f"{m.group('low')} - {m.group('high')}"
+            _add(m.group("name"), m.group("value"), m.group("unit"),
+                 m.group("low"), m.group("high"), rr)
             continue
 
-        # Try Regex 2 (Line with no printed range)
-        m2 = regex_no_range.match(cleaned_line)
-        if m2:
-            name = m2.group("name").strip()
-            val_str = m2.group("value").strip()
-            unit = m2.group("unit")
-            num_val = _clean_number(val_str)
-
-            # Strict rule: If report lacks printed range -> 'no_range_on_report'
-            biomarkers.append({
-                "name": name,
-                "value": num_val if num_val is not None else val_str,
-                "unit": unit or "",
-                "printed_range_low": None,
-                "printed_range_high": None,
-                "raw_range": "",
-                "status": "no_range_on_report"
-            })
+        # Try Regex E (colon form — do before D/B to avoid false B match)
+        m = re_E.match(line)
+        if m:
+            low_s = m.group("low") if m.lastindex and "low" in m.groupdict() else None
+            high_s = m.group("high") if m.lastindex and "high" in m.groupdict() else None
+            _add(m.group("name"), m.group("value"), m.group("unit"), low_s, high_s)
             continue
 
-        # Try Regex 3 (Simple table layout)
-        m3 = regex_simple_table.match(cleaned_line)
-        if m3:
-            name = m3.group("name").strip()
-            val_str = m3.group("value").strip()
-            low_str = m3.group("low")
-            high_str = m3.group("high")
-
-            num_val = _clean_number(val_str)
-            low_val = _clean_number(low_str)
-            high_val = _clean_number(high_str)
-
-            status = evaluate_biomarker(name, num_val if num_val is not None else val_str, None, low_val, high_val)
-            biomarkers.append({
-                "name": name,
-                "value": num_val if num_val is not None else val_str,
-                "unit": "",
-                "printed_range_low": low_val,
-                "printed_range_high": high_val,
-                "raw_range": f"{low_str} - {high_str}",
-                "status": status
-            })
+        # Try Regex D (single-bound)
+        m = re_D.match(line)
+        if m:
+            bound = m.group("bound").strip()
+            bound_val = _clean_number(re.sub(r"[<>]", "", bound))
+            if "<" in bound:
+                low_s, high_s = "0", str(bound_val) if bound_val else None
+            else:
+                low_s, high_s = str(bound_val) if bound_val else None, None
+            _add(m.group("name"), m.group("value"), m.group("unit"), low_s, high_s, bound)
             continue
 
-        # Fallback keyword matching for known test names embedded in unstructured text
-        lower_line = cleaned_line.lower()
+        # Try Regex B (no range)
+        m = re_B.match(line)
+        if m:
+            name = m.group("name").strip()
+            key = name.lower()
+            if key not in seen_names and len(name) >= 2:
+                seen_names.add(key)
+                num_val = _clean_number(m.group("value"))
+                biomarkers.append({
+                    "name": name,
+                    "value": num_val if num_val is not None else m.group("value"),
+                    "unit": m.group("unit") or "",
+                    "printed_range_low": None,
+                    "printed_range_high": None,
+                    "raw_range": "",
+                    "status": "no_range_on_report",
+                })
+            continue
+
+        # Try Regex C (tabular, no unit)
+        m = re_C.match(line)
+        if m:
+            rr = f"{m.group('low')} - {m.group('high')}"
+            _add(m.group("name"), m.group("value"), None,
+                 m.group("low"), m.group("high"), rr)
+            continue
+
+        # Fallback: keyword scan for known test names within unstructured lines
+        lower_line = line.lower()
         for kt in known_tests:
             if re.search(rf"\b{re.escape(kt)}\b", lower_line):
-                # Search for numbers in this line
-                nums = re.findall(r"[\d,]+(?:\.\d+)?", cleaned_line)
+                nums = re.findall(r"[<>]?\s*[\d,]+(?:\.\d+)?", line)
+                nums = [n.strip() for n in nums if n.strip()]
                 if nums:
-                    val = _clean_number(nums[0])
-                    low_val = _clean_number(nums[1]) if len(nums) > 1 else None
-                    high_val = _clean_number(nums[2]) if len(nums) > 2 else None
-                    raw_range = f"{low_val} - {high_val}" if (low_val is not None and high_val is not None) else ""
-                    status = evaluate_biomarker(kt.title(), val, None, low_val, high_val)
-                    biomarkers.append({
-                        "name": kt.title(),
-                        "value": val,
-                        "unit": "",
-                        "printed_range_low": low_val,
-                        "printed_range_high": high_val,
-                        "raw_range": raw_range,
-                        "status": status
-                    })
+                    val_str = nums[0]
+                    low_str2 = nums[1] if len(nums) > 1 else None
+                    high_str2 = nums[2] if len(nums) > 2 else None
+                    # heuristic: if two numbers and they're plausibly a range
+                    if low_str2 and high_str2:
+                        lv = _clean_number(low_str2)
+                        hv = _clean_number(high_str2)
+                        vv = _clean_number(val_str)
+                        # sanity: low < high
+                        if lv is not None and hv is not None and lv < hv:
+                            display_name = kt.title()
+                            _add(display_name, val_str, None, low_str2, high_str2)
+                            break
+                    elif low_str2 is None:
+                        # single value only → no_range
+                        display_name = kt.title()
+                        key = display_name.lower()
+                        if key not in seen_names:
+                            seen_names.add(key)
+                            num_val = _clean_number(val_str)
+                            biomarkers.append({
+                                "name": display_name,
+                                "value": num_val if num_val is not None else val_str,
+                                "unit": "",
+                                "printed_range_low": None,
+                                "printed_range_high": None,
+                                "raw_range": "",
+                                "status": "no_range_on_report",
+                            })
                 break
 
     return biomarkers
@@ -287,6 +386,5 @@ def apply_user_corrections(corrected_text: str) -> Dict[str, Any]:
         "red_flags": red_flags,
         "clarity": clarity,
         "requires_verification": False,
-        "status": "ready"
+        "status": "ready",
     }
-

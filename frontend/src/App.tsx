@@ -134,14 +134,16 @@ export const App: React.FC = () => {
         backendHealthy={backendHealthy}
       />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8">
-        {/* Global Language and Reading Depth Selector */}
-        <LanguageSelector
-          language={language}
-          onLanguageChange={setLanguage}
-          readingLevel={readingLevel}
-          onReadingLevelChange={setReadingLevel}
-        />
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
+        {/* Language / Depth selector — only on upload screen */}
+        {screen === 'upload' && (
+          <LanguageSelector
+            language={language}
+            onLanguageChange={setLanguage}
+            readingLevel={readingLevel}
+            onReadingLevelChange={setReadingLevel}
+          />
+        )}
 
         {/* View Routing */}
         {screen === 'upload' && (
