@@ -27,3 +27,4 @@ Follow-up: 4 weeks
 Emergency: 080-XXXX-XXXX
 
 This explains your report. It does not replace your doctor.
+
