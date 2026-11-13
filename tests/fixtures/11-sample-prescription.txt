@@ -1,0 +1,29 @@
+Dr. A. Kumar  MBBS, MD (General Medicine)
+Reg No: MCI-XXXXX  |  Apollo Clinic, Bengaluru
+Date: DD/MM/YYYY
+---------------------------------------------
+Patient: [ANONYMIZED]  Age: 52 yrs  Sex: M
+---------------------------------------------
+Diagnosis: Type 2 Diabetes Mellitus, Stage-1 Hypertension
+---------------------------------------------
+Rx
+1. Tab Metformin 500mg  BD  x 30 days
+   (Take after breakfast and dinner)
+2. Tab Amlodipine 5mg   OD  x 30 days
+   (Take in the morning after food)
+3. Tab Aspirin 75mg     OD  x 30 days
+   (Take after breakfast - do NOT take on empty stomach)
+4. Cap Vitamin D3 60000 IU  once weekly  x 8 weeks
+   (Take with milk on Sunday morning)
+---------------------------------------------
+Advice:
+- Low-salt, low-sugar diet
+- 30 min brisk walk daily
+- Monitor BP at home twice a week
+- Recheck HbA1c and lipid profile after 3 months
+- Do NOT stop or modify medications without consulting doctor
+---------------------------------------------
+Follow-up: 4 weeks
+Emergency: 080-XXXX-XXXX
+
+This explains your report. It does not replace your doctor.

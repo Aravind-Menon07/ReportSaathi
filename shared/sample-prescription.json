@@ -1,0 +1,74 @@
+{
+  "document_id": "sample-prescription-demo",
+  "status": "ready",
+  "requires_verification": false,
+  "disclaimer": "This explains your report. It does not replace your doctor.",
+  "language": "English",
+  "reading_level": "Standard",
+  "document_type": "prescription",
+  "summary": "This prescription has been written for the management of Type 2 Diabetes and Stage-1 Hypertension. It contains 4 medicines. ReportSaathi explains what each medicine is generally used for — always follow your doctor's instructions exactly.",
+
+  "biomarkers": [],
+
+  "medicines": [
+    {
+      "name": "Metformin",
+      "dosage": "500mg",
+      "frequency": "BD",
+      "frequency_full": "Twice Daily — after breakfast and dinner",
+      "duration": "30 days",
+      "status": "active",
+      "plain_language_explanation": "Metformin is commonly prescribed to help control blood sugar in Type 2 Diabetes. It works mainly by reducing the amount of glucose your liver produces. It does not cause low blood sugar on its own.",
+      "safety_note": "Take exactly as written. Do not stop without consulting your doctor."
+    },
+    {
+      "name": "Amlodipine",
+      "dosage": "5mg",
+      "frequency": "OD",
+      "frequency_full": "Once Daily — in the morning after food",
+      "duration": "30 days",
+      "status": "active",
+      "plain_language_explanation": "Amlodipine belongs to a group of medicines called calcium channel blockers. It relaxes the walls of blood vessels, making it easier for your heart to pump blood and helping to lower blood pressure.",
+      "safety_note": "Do not stop suddenly. If you notice swollen ankles, inform your doctor at your next visit."
+    },
+    {
+      "name": "Aspirin",
+      "dosage": "75mg",
+      "frequency": "OD",
+      "frequency_full": "Once Daily — after breakfast (NEVER on empty stomach)",
+      "duration": "30 days",
+      "status": "active",
+      "plain_language_explanation": "A low dose of aspirin helps prevent blood clots from forming in arteries. It is often prescribed alongside blood pressure and diabetes medicines to protect the heart.",
+      "safety_note": "Always take after food. Tell your doctor immediately if you notice dark or tarry stools."
+    },
+    {
+      "name": "Vitamin D3",
+      "dosage": "60000 IU",
+      "frequency": "Once weekly",
+      "frequency_full": "Every Sunday morning — take with milk",
+      "duration": "8 weeks",
+      "status": "active",
+      "plain_language_explanation": "Vitamin D3 is a supplement (not a prescription drug). It helps the body absorb calcium and keeps bones and muscles healthy. Many adults in India have low Vitamin D levels.",
+      "safety_note": "Take only once a week as written — not daily."
+    }
+  ],
+
+  "frequency_legend": {
+    "OD": "Once Daily",
+    "BD": "Twice Daily",
+    "TDS": "Three Times a Day",
+    "SOS": "If needed",
+    "AC": "Before food",
+    "PC": "After food"
+  },
+
+  "red_flags": [],
+
+  "doctor_questions": [
+    "Can you explain why I am taking Metformin and Aspirin together?",
+    "What side effects from any of these medicines should make me call you immediately?",
+    "If I accidentally miss a dose of Amlodipine, should I double up the next day?",
+    "What blood sugar or blood pressure readings at home should worry me?",
+    "Are there any foods, drinks, or over-the-counter medicines I should avoid while taking these?"
+  ]
+}

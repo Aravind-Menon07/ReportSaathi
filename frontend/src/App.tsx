@@ -15,6 +15,7 @@ import {
   submitCorrections,
   generateExplanations,
   loadSampleReport,
+  loadSamplePrescription,
 } from './api';
 
 import { SupportedLanguage, ReadingLevel, BiomarkerValue, ReportResult } from './types';
@@ -92,6 +93,23 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleLoadSamplePrescription = async () => {
+    setIsLoading(true);
+    setErrorMessage(undefined);
+
+    try {
+      const sample = await loadSamplePrescription();
+      setDocumentId(sample.document_id);
+      setBiomarkers(sample.biomarkers);
+      setReportResult(sample);
+      setScreen('results');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error loading sample prescription.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRawTextCorrection = async (correctedText: string) => {
     setIsLoading(true);
     try {
@@ -150,6 +168,7 @@ export const App: React.FC = () => {
           <UploadView
             onFileUpload={handleFileUpload}
             onLoadSample={handleLoadSample}
+            onLoadSamplePrescription={handleLoadSamplePrescription}
             isLoading={isLoading}
             errorMessage={errorMessage}
             backendHealthy={backendHealthy}

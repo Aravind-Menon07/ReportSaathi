@@ -5,6 +5,7 @@
 
 import { BiomarkerValue, MedicineInstruction, ReportResult } from './types';
 import sampleReportData from '../../shared/sample-report.json';
+import samplePrescriptionData from '../../shared/sample-prescription.json';
 
 const API_BASE = '/api';
 
@@ -131,5 +132,10 @@ export async function generateExplanations(
 export async function loadSampleReport(): Promise<ReportResult> {
   // Returns the gold-standard CBC fixture from shared/sample-report.json
   return sampleReportData as unknown as ReportResult;
+}
+
+export async function loadSamplePrescription(): Promise<ReportResult> {
+  // Returns the anonymized prescription demo fixture from shared/sample-prescription.json
+  return samplePrescriptionData as unknown as ReportResult;
 }
 

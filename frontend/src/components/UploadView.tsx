@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileText, AlertTriangle, ArrowRight, Sparkles, ShieldCheck, Activity } from 'lucide-react';
+import { UploadCloud, FileText, AlertTriangle, ArrowRight, Sparkles, ShieldCheck, Activity, Pill } from 'lucide-react';
 
 interface UploadViewProps {
   onFileUpload: (file: File) => void;
   onLoadSample: () => void;
+  onLoadSamplePrescription: () => void;
   isLoading: boolean;
   errorMessage?: string;
   backendHealthy: boolean;
@@ -12,6 +13,7 @@ interface UploadViewProps {
 export const UploadView: React.FC<UploadViewProps> = ({
   onFileUpload,
   onLoadSample,
+  onLoadSamplePrescription,
   isLoading,
   errorMessage,
   backendHealthy,
@@ -172,6 +174,29 @@ export const UploadView: React.FC<UploadViewProps> = ({
         >
           <Sparkles className="w-4 h-4 text-amber-500" />
           <span>Load Gold-Standard Sample</span>
+        </button>
+      </div>
+
+      {/* Prescription Sample Button */}
+      <div className="bg-teal-50 border border-teal-200 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 bg-white text-teal-700 rounded-xl shadow-sm border border-teal-200">
+            <Pill className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-slate-800">Try a Sample Prescription</h4>
+            <p className="text-xs text-slate-500">Anonymized demo — Metformin, Amlodipine, Aspirin, Vitamin D3 explained in plain language.</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onLoadSamplePrescription}
+          disabled={isLoading}
+          className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold shadow-sm transition shrink-0"
+        >
+          <Sparkles className="w-4 h-4 text-teal-200" />
+          <span>Load Sample Prescription</span>
         </button>
       </div>
     </div>
