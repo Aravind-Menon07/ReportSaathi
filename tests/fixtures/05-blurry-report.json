@@ -1,0 +1,7 @@
+{
+  "document_id": "test-fix-05-blurry",
+  "test_name": "Garbled Low-Light Scan",
+  "raw_text": "H#m0gl~b!n ?? ? 13.5 g/dL ~~~ 12.0--15.0\nPl@t#l#ts ??? 240,000 /cumm ^^^ 150000..450000\n||| ||| wbc ??? 6800",
+  "expected_clarity_status": "unclear",
+  "expected_requires_verification": true
+}

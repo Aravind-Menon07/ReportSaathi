@@ -1,0 +1,35 @@
+{
+  "document_id": "test-fix-01-normal",
+  "test_name": "Complete Blood Count (CBC)",
+  "raw_text": "Hemoglobin 14.0 g/dL 12.0 - 15.5\nWBC 6500 cells/mcL 4000 - 11000\nPlatelets 250000 /mcL 150000 - 450000",
+  "biomarkers": [
+    {
+      "name": "Hemoglobin",
+      "value": 14.0,
+      "unit": "g/dL",
+      "printed_range_low": 12.0,
+      "printed_range_high": 15.5,
+      "raw_range": "12.0 - 15.5",
+      "expected_status": "normal"
+    },
+    {
+      "name": "WBC",
+      "value": 6500,
+      "unit": "cells/mcL",
+      "printed_range_low": 4000,
+      "printed_range_high": 11000,
+      "raw_range": "4000 - 11000",
+      "expected_status": "normal"
+    },
+    {
+      "name": "Platelets",
+      "value": 250000,
+      "unit": "/mcL",
+      "printed_range_low": 150000,
+      "printed_range_high": 450000,
+      "raw_range": "150000 - 450000",
+      "expected_status": "normal"
+    }
+  ],
+  "expected_red_flags": 0
+}

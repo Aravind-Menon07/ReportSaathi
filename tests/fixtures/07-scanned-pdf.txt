@@ -1,0 +1,17 @@
+======================================================================
+               METROPOLIS ADVANCED DIAGNOSTICS LABORATORY
+                        PATIENT EVALUATION REPORT
+======================================================================
+Patient Name: [REDACTED]             Age / Sex: 48 Y / M
+Referred By: Dr. S. K. Sharma        Date: 12-Nov-2026
+
+TEST DESCRIPTION               RESULT     UNITS       REFERENCE INTERVAL
+----------------------------------------------------------------------
+Hemoglobin                     13.2       g/dL        13.0 - 17.0
+Total Leucocyte Count (TLC)    8,400      /cumm       4,000 - 11,000
+Platelet Count                 1,85,000   /cumm       1,50,000 - 4,50,000
+Serum Creatinine               1.2        mg/dL       0.6 - 1.4
+Fasting Blood Sugar            118        mg/dL       70 - 100
+HbA1c Glycated Hemoglobin      6.4        %           4.0 - 5.6
+======================================================================
+End of Report. Authenticated by Quality Manager.

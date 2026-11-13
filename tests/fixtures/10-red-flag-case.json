@@ -1,0 +1,48 @@
+{
+  "document_id": "test-fix-10-critical-red-flags",
+  "test_name": "Emergency Critical Values Panel",
+  "raw_text": "Serum Potassium 6.8 mmol/L 3.5 - 5.1\nPlatelet Count 18,000 /uL 150000 - 450000\nSerum Creatinine 5.8 mg/dL 0.7 - 1.3\nBlood Glucose Fasting 410 mg/dL 70 - 100\nHemoglobin 6.2 g/dL 12.0 - 15.5",
+  "biomarkers": [
+    {
+      "name": "Serum Potassium",
+      "value": 6.8,
+      "unit": "mmol/L",
+      "printed_range_low": 3.5,
+      "printed_range_high": 5.1,
+      "raw_range": "3.5 - 5.1"
+    },
+    {
+      "name": "Platelet Count",
+      "value": 18000,
+      "unit": "/uL",
+      "printed_range_low": 150000,
+      "printed_range_high": 450000,
+      "raw_range": "150,000 - 450,000"
+    },
+    {
+      "name": "Serum Creatinine",
+      "value": 5.8,
+      "unit": "mg/dL",
+      "printed_range_low": 0.7,
+      "printed_range_high": 1.3,
+      "raw_range": "0.7 - 1.3"
+    },
+    {
+      "name": "Blood Glucose Fasting",
+      "value": 410,
+      "unit": "mg/dL",
+      "printed_range_low": 70,
+      "printed_range_high": 100,
+      "raw_range": "70 - 100"
+    },
+    {
+      "name": "Hemoglobin",
+      "value": 6.2,
+      "unit": "g/dL",
+      "printed_range_low": 12.0,
+      "printed_range_high": 15.5,
+      "raw_range": "12.0 - 15.5"
+    }
+  ],
+  "expected_critical_count": 5
+}

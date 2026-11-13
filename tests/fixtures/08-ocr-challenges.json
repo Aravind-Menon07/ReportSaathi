@@ -1,0 +1,15 @@
+{
+  "document_id": "test-fix-08-challenges",
+  "test_name": "OCR Challenges with Indian Numbers and Operators",
+  "raw_text": "Platelet Count 3,25,000 /cumm 1,50,000 - 4,50,000\nThyroid Stimulating Hormone TSH < 0.5 uIU/mL 0.35 - 4.94\nHepatitis B Surface Antigen Negative Non-Reactive",
+  "challenge_tokens": [
+    "3,25,000 /cumm",
+    "< 0.5",
+    "Negative"
+  ],
+  "expected_extractions": {
+    "platelets_value": 325000,
+    "tsh_operator": "<",
+    "hbsag_qualitative": "Negative"
+  }
+}

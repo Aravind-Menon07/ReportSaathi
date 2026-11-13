@@ -2,150 +2,149 @@
 
 > **Empowering patients and caregivers with clear, plain-language explanations of medical lab reports and prescriptions.**
 
+[![CI Pipeline](https://github.com/Aravind-Menon07/ReportSaathi/actions/workflows/ci.yml/badge.svg)](https://github.com/Aravind-Menon07/ReportSaathi/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python: 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Node.js: 20+](https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org)
-[![Tesseract OCR: 5.x](https://img.shields.io/badge/Tesseract_OCR-5.x-5C5C5C)](https://github.com/tesseract-ocr/tesseract)
-[![Powered by Gemini](https://img.shields.io/badge/AI-Google_Gemini-4285F4?logo=google&logoColor=white)](https://aistudio.google.com)
+[![React: 18.3](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![FastAPI: 0.162](https://img.shields.io/badge/FastAPI-0.162-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Tests: 40 Passed](https://img.shields.io/badge/Tests-40%20Passed-brightgreen)](tests/)
 
 ---
 
 ## 1. Overview
 
-**ReportSaathi** (*"Report Companion"*) is a patient-first health communication tool designed to eliminate medical jargon and bridge the communication gap between healthcare providers and patients in India.
+**ReportSaathi** (*"Report Companion"*) is an educational health literacy tool designed to eliminate clinical jargon and bridge the communication gap between healthcare providers and patients in India.
 
-When patients receive diagnostic test reports, lab panels, or printed prescriptions, they are routinely confronted with dense clinical terminology (*leukocytosis*, *creatinine*), unfamiliar laboratory units, and Latin shorthand (*BD*, *TDS*, *HS*). During rushed 5–10 minute consultations, patients often leave clinics without understanding their results, leading to search-engine panic or unsafe self-medication.
+When patients receive diagnostic test reports or printed prescriptions, they are routinely confronted with dense clinical terminology (*leukocytosis*, *creatinine*), unfamiliar laboratory units, and Latin shorthand (*BD*, *TDS*, *HS*). During rushed 5–10 minute consultations, patients often leave clinics without understanding their results, leading to search-engine panic or unsafe self-medication.
 
-ReportSaathi converts uploaded medical reports (`PDF`, `JPG`, `PNG`) into simple, accessible explanations in the patient's preferred language (**English**, **Hindi**, or **Kannada**), strictly verified against the normal reference ranges printed directly on their own document.
-
----
-
-## 2. Core Pillars & Safety Guardrails
-
-| Pillar | What ReportSaathi Does | Hard Safety Boundary (What It NEVER Does) |
-| :--- | :--- | :--- |
-| **Document-Grounded** | Compares extracted test values **strictly** against the reference ranges printed on the user's specific lab slip. | **Never Invents Ranges:** Never substitutes or infers missing ranges from external textbooks or databases. |
-| **No-Diagnosis Policy** | Explains what biomarkers measure in simple everyday terms (e.g., *"Hemoglobin carries oxygen in your blood"*). | **Never Diagnoses:** Never names suspected diseases, conditions, or ranks diagnostic likelihoods. |
-| **Prescription Clarity** | Translates frequency abbreviations (*OD* = once daily, *BD* = twice daily with food) into plain language while preserving the exact prescribed drug name and dose verbatim. | **Never Recommends Treatments:** Never alters dosages, suggests alternative drugs, or advises starting/stopping medications. |
-| **Red-Flag Escalation** | Flags critically abnormal biomarker thresholds with urgent, prominent visual banners directing immediate clinical attention. | **Never Triages Emergencies:** Clearly states it is not an emergency triage or clinical decision-support system. |
-| **Consultation Readiness** | Generates 3–5 personalized, non-directive questions the patient can carry into their next doctor visit. | **Never Replaces Doctors:** Re-iterates on every screen and PDF summary that explanations are educational. |
-| **Ephemeral Privacy** | Operates with zero permanent storage of Protected Health Information (PHI) and immediate memory purging in compliance with the Indian **DPDP Act (2023)**. | **No Third-Party Model Training:** Uses enterprise/developer zero-retention pipelines to ensure health data is never retained or trained on. |
+ReportSaathi converts uploaded medical reports (`PDF`, `JPG`, `PNG` up to 10 MB) into simple, accessible explanations in the patient's preferred language (**English**, **Hindi**, or **Kannada**), strictly verified against the normal reference ranges printed directly on their own document.
 
 ---
 
-## 3. Workshop & Project Stages
+## 2. Critical Medical Safety & Regulatory Non-Negotiables (`docs/06b-safety-rules.md`)
 
-This repository follows the structured **Idea to Deployment** methodology:
-
-* **Stage 1 — Problem Definition:** [`docs/01.problem.md`](docs/01.problem.md)  
-  *Detailed examination of patient comprehension deficits, consultation time constraints, and risks of self-medication.*
-* **Stage 2 — Research & Evidence:** [`docs/02.research.md`](docs/02.research.md)  
-  *Quantitative health literacy data in India, competitive product landscape, complaint patterns, and Indian regulatory requirements (DPDP Act 2023).*
-* **Stage 3 — Scope Definition:** [`docs/03.scope.md`](docs/03.scope.md)  
-  *Core user journey, MVP boundaries, testable acceptance criteria, and explicit non-goals.*
-* **Stage 4 — System Architecture:** [`docs/04.architecture.md`](docs/04.architecture.md)  
-  *Component architecture, OCR processing pipeline, deterministic range comparison engine, prompt engineering templates, and privacy purge mechanics.*
+1. **ZERO DIAGNOSIS:** Never diagnose illnesses, predict diseases, or claim a patient is disease-free.
+2. **ZERO MEDICATION MODIFICATION:** Never advise starting, stopping, increasing, or decreasing prescription medicine dosages.
+3. **STRICT REPORT REFERENCE RANGES:** Compare laboratory values **ONLY** against ranges printed on the report. If a value lacks a printed range, assign `no_range_on_report` (NEVER assume standard population ranges).
+4. **DETERMINISTIC RED FLAGS BEFORE AI:** Emergency alerts for critical Potassium, Platelets, Hemoglobin, Glucose, and Creatinine **MUST** execute programmatically in pure Python **BEFORE** any AI explanation generation.
+5. **MANDATORY DISCLAIMER:** Every screen, PDF, and API payload displays:  
+   > *"This explains your report. It does not replace your doctor."*
+6. **EPHEMERAL PROCESSING & 10 MB LIMIT:** Maximum upload size is 10 MB. Temporary files and extracted text are securely wiped after processing with zero permanent storage in compliance with the **Digital Personal Data Protection (DPDP) Act, 2023**.
 
 ---
 
-## 4. Technical Architecture & Stack
-
-```
-+------------------------------------------------------------------------+
-|                      Client Layer (Cloudflare Pages)                   |
-|   Responsive React / Vite / Tailwind UI with Multilingual Support      |
-|   (English, Hindi, Kannada) + DPDP Notice & Consent Gate               |
-+-----------------------------------+------------------------------------+
-                                    | HTTPS / Ephemeral Upload (Max 10MB)
-                                    v
-+------------------------------------------------------------------------+
-|                        Backend Layer (Render)                          |
-|                     FastAPI / Python 3.11+ Service                     |
-+-----------------------------------+------------------------------------+
-                                    |
-      +-----------------------------+-----------------------------+
-      v                                                           v
-+-----------------------------------+   +------------------------------------+
-|         OCR Pipeline              |   |     Deterministic Range Engine     |
-|   - OpenCV image preprocessing    |   |   - Compares parsed values against |
-|   - Tesseract OCR 5.x extraction  |   |     printed laboratory ranges      |
-|   - Human-in-the-loop review UI   |   |   - Low / Normal / High / Critical |
-+-----------------------------------+   +------------------------------------+
-                                    |
-                                    v
-+------------------------------------------------------------------------+
-|                      AI Explainer & Doctor Questions                   |
-|   Google Gemini API with zero-retention controls                       |
-|   - Plain-language simplification (Simple, Standard, Detailed)         |
-|   - 3-5 structured, non-directive questions for the physician          |
-|   - Strict system prompt guardrails against diagnosis & prescription   |
-+-----------------------------------+------------------------------------+
-                                    |
-                                    v
-+------------------------------------------------------------------------+
-|                          Output Generation                             |
-|   - Interactive web review screen with side-by-side verification       |
-|   - Client-side downloadable summary PDF (report, ranges, questions)   |
-|   - Memory wipe & ephemeral session destruction                        |
-+------------------------------------------------------------------------+
-```
-
----
-
-## 5. Development Setup & Verification
-
-### Prerequisites
-
-| Tool | Version Requirement | Purpose |
-| :--- | :--- | :--- |
-| **Git** | 2.x or newer | Version control and collaboration |
-| **Node.js** | v20 LTS or higher | Frontend build system & Gemini CLI runner |
-| **npm** | Compatible with Node | Package manager |
-| **Python** | 3.11 or higher | Backend OCR pipeline & API services |
-| **Tesseract OCR** | 5.x | Optical Character Recognition for printed reports |
-| **Gemini CLI** | `@google/gemini-cli` | Terminal AI assistance and testing |
-| **Antigravity IDE** | Latest | AI-assisted development environment |
-
-### Verification Command
-
-To verify that your local development environment meets all prerequisites:
-
-```powershell
-git --version; node --version; npm --version; python --version; pip --version; tesseract --version; gemini --version
-```
-
-**Expected terminal output:**
-```text
-git version 2.x
-v20.x.x (or higher)
-10.x.x
-Python 3.11.x (or higher)
-pip 24.x / 25.x
-tesseract v5.x
-0.x.x (Gemini CLI)
-```
-
----
-
-## 6. Repository Layout
+## 3. Project File Tree
 
 ```text
 ReportSaathi/
-├── assets/
-│   └── saathi.png           # Project visual assets & branding
+├── .github/
+│   └── workflows/
+│       └── ci.yml                     # GitHub Actions CI workflow (40 Python tests + Vite build)
+├── backend/
+│   ├── __init__.py
+│   ├── main.py                        # FastAPI application with REST endpoints & CORS
+│   ├── safety/
+│   │   ├── __init__.py
+│   │   ├── rules.py                   # Deterministic 5% range evaluator & critical red flags
+│   │   ├── banned_phrases.py          # Prohibited assertion detector & AI sanitizer
+│   │   └── privacy.py                 # PrivacyPreservingLogFilter & EphemeralStorageManager
+│   └── integrations/
+│       ├── __init__.py
+│       └── ocr.py                     # Tesseract OCR, noise scoring, regex parser, user corrections
+├── shared/
+│   ├── types.ts                       # Shared TypeScript contracts
+│   └── sample-report.json             # Gold-standard adult CBC fixture
+├── frontend/
+│   ├── index.html                     # HTML5 entry point
+│   ├── package.json                   # React 18, Vite 5, Lucide icons
+│   ├── tsconfig.json                  # TypeScript configuration
+│   ├── tsconfig.node.json
+│   ├── vite.config.ts                 # Vite server & API proxy
+│   └── src/
+│       ├── main.tsx                   # React root mount
+│       ├── App.tsx                    # Multi-screen application router & state manager
+│       ├── index.css                  # Tailwind styles & print CSS
+│       ├── types.ts                   # Frontend TypeScript interfaces
+│       ├── api.ts                     # API client with health probe & zero mock fallbacks
+│       └── components/
+│           ├── Header.tsx             # App header with language/level badges & reset
+│           ├── Footer.tsx             # Fixed footer with mandatory medical disclaimer
+│           ├── LanguageSelector.tsx   # English, Hindi, Kannada & Simple, Standard, Detailed
+│           ├── UploadView.tsx         # Drag-and-drop, 10MB limit, sample loader, DPDP consent
+│           ├── CheckValuesView.tsx    # HITL editable verification table & empty-state warning
+│           ├── ResultsView.tsx        # Red-flag emergency banner & explained biomarker cards
+│           ├── DoctorQuestionsView.tsx# 3 to 6 targeted doctor consultation questions
+│           └── ShareView.tsx          # WhatsApp summary share & printable PDF export
+├── tests/
+│   ├── test_safety.py                 # 13 tests: range boundaries, missing ranges, red flags
+│   ├── test_ocr.py                    # 5 tests: extraction, blurry scans, Indian numbers, HITL
+│   ├── test_api_contract.py           # 13 tests: endpoint schemas, 10MB limit, HTTP codes
+│   ├── test_privacy.py                # 9 tests: PHI log scrubbing, path traversal, TTL wipe
+│   └── fixtures/
+│       ├── 01-normal-report.json      # Standard normal CBC
+│       ├── 02-high-values.json        # Elevated cholesterol
+│       ├── 03-low-values.json         # Low Hb + prescription
+│       ├── 04-missing-ranges.json     # CRP with missing range
+│       ├── 05-blurry-report.json      # Garbled low-light scan
+│       ├── 06-multiple-values.json    # 14-parameter multi-panel
+│       ├── 07-scanned-pdf.json        # Metropolis tabular scan
+│       ├── 07-scanned-pdf.txt         # Multi-column text
+│       ├── 08-ocr-challenges.json     # 3,25,000 /cumm and < 0.5 operators
+│       ├── 09-multilingual-report.json# Trilingual translations
+│       └── 10-red-flag-case.json      # Emergency critical red-flag values
 ├── docs/
-│   ├── 01.problem.md        # Stage 1: Problem Definition
-│   ├── 02.research.md       # Stage 2: Research & Empirical Evidence
-│   ├── 03.scope.md          # Stage 3: Project Scope & Guardrails
-│   └── 04.architecture.md   # Stage 4: Technical Architecture
-├── backend/                 # FastAPI backend (to be populated)
-├── frontend/                # React / Vite frontend (to be populated)
-└── README.md                # Project documentation & setup
+│   ├── 01.problem.md                  # Stage 1: Problem Definition
+│   ├── 02.research.md                 # Stage 2: Empirical Research & Regulatory Requirements
+│   ├── 03.scope.md                    # Stage 3: Scope Definition & Boundaries
+│   └── 04.architecture.md             # Stage 4: System Architecture & Technical Specifications
+└── README.md
 ```
 
 ---
 
-## 7. Disclaimer
+## 4. Running the 40-Test QA Suite
 
-> **Medical & Regulatory Notice:**  
-> ReportSaathi is an educational health literacy tool designed solely to assist patients in understanding their medical documents. It is **not** a medical device, diagnostic system, or clinical decision-support tool. It does **not** provide medical advice, diagnosis, or treatment. Users are explicitly advised to consult a qualified healthcare professional regarding any medical condition or laboratory finding.
+The test suite requires zero external network dependencies and executes against Python's built-in `unittest` runner:
+
+```powershell
+python -m unittest discover tests -v
+```
+
+### Test Suite Breakdown (100% Passing)
+
+| Test File | Test Count | Scope Verified |
+| :--- | :--- | :--- |
+| `tests/test_safety.py` | 13 | Normal, borderline (within 5%), out-of-range, missing range discipline (`no_range_on_report`), Potassium, Platelet, Hemoglobin, Glucose, Creatinine red flags, and banned phrase regex neutralization. |
+| `tests/test_ocr.py` | 5 | Clean OCR text extraction, noise ratio clarity scoring (> 0.15), missing range parser, Indian comma number formatting (`3,25,000`), and user correction re-validation. |
+| `tests/test_api_contract.py` | 13 | Schema validation, 10 MB payload limit (413), empty file rejection (400), unsupported format (415), empty correction rejection (422), mandatory disclaimer presence, and feedback rating bounds. |
+| `tests/test_privacy.py` | 9 | Phone numbers, Aadhaar IDs, emails, numerical lab values, drug names log scrubbing, logging filter integration, path traversal defense (`../`), null-byte defense (`\0`), on-demand wipe (TC-26), and TTL purge. |
+| **Total** | **40** | **40 / 40 Passed (100%)** |
+
+---
+
+## 5. Development & Execution Guide
+
+### Start FastAPI Backend
+
+```powershell
+uvicorn backend.main:app --reload --port 8000
+```
+* Interactive API Documentation (Swagger): `http://localhost:8000/docs`
+* Health Check: `http://localhost:8000/api/health`
+
+### Build & Run Frontend
+
+```powershell
+cd frontend
+npm install
+npm run build
+npm run dev
+```
+* Frontend Application: `http://localhost:5173`
+
+---
+
+## 6. Regulatory & Privacy Notice
+
+ReportSaathi complies with the **Digital Personal Data Protection (DPDP) Act, 2023** (India). Uploaded documents and extracted strings are retained solely in ephemeral server RAM during extraction and explanation generation, after which they are permanently wiped. No Protected Health Information (PHI) is persisted or used for AI model training.

@@ -1,0 +1,49 @@
+{
+  "document_id": "sample-cbc-gold-standard",
+  "status": "ready",
+  "requires_verification": false,
+  "disclaimer": "This explains your report. It does not replace your doctor.",
+  "language": "English",
+  "reading_level": "Standard",
+  "summary": "This Complete Blood Count (CBC) report shows that your red blood cell count, white blood cell count, and platelets are all within the reference ranges printed on this laboratory report.",
+  "biomarkers": [
+    {
+      "name": "Hemoglobin",
+      "value": 13.5,
+      "unit": "g/dL",
+      "printed_range_low": 12.0,
+      "printed_range_high": 15.5,
+      "raw_range": "12.0 - 15.5",
+      "status": "normal",
+      "explanation": "Hemoglobin is the protein in red blood cells that carries oxygen from your lungs to the rest of your body. Your value of 13.5 g/dL falls comfortably within the normal printed reference range (12.0 - 15.5 g/dL)."
+    },
+    {
+      "name": "Total White Blood Cell Count (WBC)",
+      "value": 6800,
+      "unit": "cells/mcL",
+      "printed_range_low": 4000,
+      "printed_range_high": 11000,
+      "raw_range": "4000 - 11000",
+      "status": "normal",
+      "explanation": "White blood cells are an essential part of your immune system, helping your body defend against infections. Your count of 6,800 is within the printed normal reference range (4,000 - 11,000 cells/mcL)."
+    },
+    {
+      "name": "Platelet Count",
+      "value": 240000,
+      "unit": "/mcL",
+      "printed_range_low": 150000,
+      "printed_range_high": 450000,
+      "raw_range": "150,000 - 450,000",
+      "status": "normal",
+      "explanation": "Platelets are tiny blood cell fragments that help your blood clot normally to stop or prevent bleeding. Your platelet count of 240,000 is healthy and inside the printed reference range (150,000 - 450,000 /mcL)."
+    }
+  ],
+  "medicines": [],
+  "red_flags": [],
+  "doctor_questions": [
+    "Are all the blood counts in this CBC report consistent with my baseline health?",
+    "Do any of these normal numbers need to be rechecked at my next annual wellness visit?",
+    "Should I maintain my current diet and hydration routine based on these findings?",
+    "Do any specific symptoms warrant repeating this blood test before my next routine checkup?"
+  ]
+}

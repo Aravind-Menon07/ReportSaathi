@@ -1,0 +1,35 @@
+{
+  "document_id": "test-fix-03-low",
+  "test_name": "Anemia Panel with Medication",
+  "raw_text": "Hemoglobin 9.2 g/dL 12.0 - 15.0\nSerum Iron 45 ug/dL 60 - 170\nRx Ferrous Sulphate 200mg OD 30 days",
+  "biomarkers": [
+    {
+      "name": "Hemoglobin",
+      "value": 9.2,
+      "unit": "g/dL",
+      "printed_range_low": 12.0,
+      "printed_range_high": 15.0,
+      "raw_range": "12.0 - 15.0",
+      "expected_status": "needs_attention"
+    },
+    {
+      "name": "Serum Iron",
+      "value": 45,
+      "unit": "ug/dL",
+      "printed_range_low": 60,
+      "printed_range_high": 170,
+      "raw_range": "60 - 170",
+      "expected_status": "needs_attention"
+    }
+  ],
+  "medicines": [
+    {
+      "name": "Ferrous Sulphate",
+      "dosage": "200mg",
+      "frequency": "OD",
+      "timing": "After meals",
+      "instructions": "Take once daily after food for 30 days"
+    }
+  ],
+  "expected_red_flags": 0
+}

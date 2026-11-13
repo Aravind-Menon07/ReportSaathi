@@ -1,0 +1,26 @@
+{
+  "document_id": "test-fix-04-missing",
+  "test_name": "Inflammatory Marker (No Printed Range)",
+  "raw_text": "C-Reactive Protein (CRP) 18.5 mg/L\nErythrocyte Sedimentation Rate 25 mm/hr",
+  "biomarkers": [
+    {
+      "name": "C-Reactive Protein (CRP)",
+      "value": 18.5,
+      "unit": "mg/L",
+      "printed_range_low": null,
+      "printed_range_high": null,
+      "raw_range": "",
+      "expected_status": "no_range_on_report"
+    },
+    {
+      "name": "Erythrocyte Sedimentation Rate",
+      "value": 25,
+      "unit": "mm/hr",
+      "printed_range_low": null,
+      "printed_range_high": null,
+      "raw_range": "",
+      "expected_status": "no_range_on_report"
+    }
+  ],
+  "expected_red_flags": 0
+}
