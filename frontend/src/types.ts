@@ -57,3 +57,4 @@ export interface UserCorrectionPayload {
   language?: SupportedLanguage | string;
   reading_level?: ReadingLevel | string;
 }
+

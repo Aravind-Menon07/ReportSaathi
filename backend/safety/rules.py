@@ -169,3 +169,4 @@ def check_red_flags(biomarkers: List[Union[Dict[str, Any], Any]]) -> List[Dict[s
                 })
 
     return alerts
+

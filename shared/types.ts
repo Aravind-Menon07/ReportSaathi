@@ -65,3 +65,4 @@ export interface FeedbackPayload {
   feedback?: string;
   document_id?: string;
 }
+

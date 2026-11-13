@@ -125,3 +125,4 @@ class EphemeralStorageManager:
                     purged += 1
 
         return purged
+

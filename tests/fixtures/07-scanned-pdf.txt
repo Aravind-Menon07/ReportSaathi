@@ -15,3 +15,4 @@ Fasting Blood Sugar            118        mg/dL       70 - 100
 HbA1c Glycated Hemoglobin      6.4        %           4.0 - 5.6
 ======================================================================
 End of Report. Authenticated by Quality Manager.
+

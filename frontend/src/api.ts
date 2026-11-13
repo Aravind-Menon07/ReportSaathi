@@ -132,3 +132,4 @@ export async function loadSampleReport(): Promise<ReportResult> {
   // Returns the gold-standard CBC fixture from shared/sample-report.json
   return sampleReportData as unknown as ReportResult;
 }
+

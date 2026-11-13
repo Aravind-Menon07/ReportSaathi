@@ -447,3 +447,4 @@ def _generate_questions(biomarkers: List[Any], language: str = "English") -> Lis
 
     # Ensure between 3 and 6 questions
     return questions[:6]
+
