@@ -40,6 +40,10 @@ build/
 *.private.key
 *.pem
 
+# Ephemeral storage
+backend/temp_uploads/
+temp_uploads/
+
 # IDE & OS files
 .DS_Store
 Thumbs.db
